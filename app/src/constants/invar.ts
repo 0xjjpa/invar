@@ -1,0 +1,1 @@
+export const INVAR_PDF_DEMO_URL = '/documents/demo.pdf'

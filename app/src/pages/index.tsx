@@ -14,6 +14,7 @@ import { Main } from "../components/Main";
 import { DarkModeSwitch } from "../components/DarkModeSwitch";
 import { CTA } from "../components/CTA";
 import { Footer } from "../components/Footer";
+import { INVARPDF } from "../components/INVAR/INVARPDF";
 
 const Index = () => (
   <Container height="100vh">
@@ -35,6 +36,7 @@ const Index = () => (
           ⚙️ <Code>How?</Code>By issuing PKI-enabled, traceable and permanent attestations through decentralized tech.
         </ListItem>
       </List>
+      <INVARPDF />
     </Main>
 
     <DarkModeSwitch />
