@@ -1,4 +1,4 @@
-import { Credential } from '@nodecfdi/credentials'
+import { Credential, SignatureAlgorithm } from '@nodecfdi/credentials'
 import { KEYUTIL, RSAKey, hex2b64 } from 'jsrsasign';
 import { importRSAPrivateKeyFromPEMFormat } from './rsa';
 
@@ -18,5 +18,11 @@ export const loadCryptoKeyFromCredential = async({ credential }: { credential: C
   const decryptedPEM = KEYUTIL.getPEM(rsaKey, "PKCS8PRV");
   const cryptoKey = await importRSAPrivateKeyFromPEMFormat(decryptedPEM);
   return cryptoKey;
+}
+
+export function generateSignature(credential: Credential, payload: string): string {
+  const signatureAsHex = credential.sign(payload, SignatureAlgorithm.SHA1);
+  const signatureAsB64 = hex2b64(signatureAsHex)
+  return signatureAsB64
 }
   

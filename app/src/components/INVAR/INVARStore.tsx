@@ -6,6 +6,7 @@ export interface PDFState {
   documentChecksum: string;
   credential: Credential;
   key: CryptoKey;
+  signature: string;
   loadDocumentURL: ({ documentURL }: { documentURL: string }) => void;
   loadDocumentChecksum: ({
     documentChecksum,
@@ -14,6 +15,7 @@ export interface PDFState {
   }) => void;
   loadCredential: ({ credential }: { credential: Credential }) => void;
   loadKey: ({ key }: { key: CryptoKey }) => void;
+  loadSignature: ({ signature }: { signature: string }) => void;
 }
 
 export const usePDFStore = create<PDFState>()((set) => ({
@@ -21,6 +23,7 @@ export const usePDFStore = create<PDFState>()((set) => ({
   documentChecksum: null,
   credential: null,
   key: null,
+  signature: null,
   loadDocumentURL: ({ documentURL }: { documentURL: string }) => {
     set(() => ({ documentURL }));
   },
@@ -36,5 +39,8 @@ export const usePDFStore = create<PDFState>()((set) => ({
   },
   loadKey: ({ key }: { key: CryptoKey }) => {
     set(() => ({ key }));
+  },
+  loadSignature: ({ signature }: { signature: string }) => {
+    set(() => ({ signature }));
   },
 }));

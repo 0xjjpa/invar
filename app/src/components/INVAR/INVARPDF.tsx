@@ -1,5 +1,5 @@
 import { INVAR_PDF_DEMO_FILE, INVAR_PDF_DEMO_URL } from "../../constants/invar";
-import { loadCryptoKeyFromCredential, loadDemoCredential } from "../../lib/fiel";
+import { generateSignature, loadCryptoKeyFromCredential, loadDemoCredential } from "../../lib/fiel";
 import { usePDFStore } from "./INVARStore";
 import { Button, Link as ChakraLink, Code, Flex, Text } from "@chakra-ui/react";
 
@@ -8,12 +8,14 @@ export const INVARPDF = () => {
   const documentChecksum = usePDFStore((state) => state.documentChecksum);
   const credential = usePDFStore((state) => state.credential);
   const key = usePDFStore((state) => state.key);
+  const signature = usePDFStore((state) => state.signature);
   const loadDocumentURL = usePDFStore((state) => state.loadDocumentURL);
   const loadDocumentChecksum = usePDFStore(
     (state) => state.loadDocumentChecksum
   );
   const loadCredential = usePDFStore((state) => state.loadCredential);
   const loadKey = usePDFStore((state) => state.loadKey);
+  const loadSignature = usePDFStore((state) => state.loadSignature);
 
   async function fetchFileHash(filename: string) {
     const response = await fetch(`/api/hash/${filename}`);
@@ -111,6 +113,24 @@ export const INVARPDF = () => {
                 }}
               >
                 Load key from credential
+              </Button>
+            </>
+          ))}
+      </Flex>
+      <Flex gap="2" alignItems={"center"} h="40px" justifyContent={'space-between'}>
+        {(documentURL && documentChecksum && credential && key) &&
+          (signature ? (
+            <Text>🔏 Signature generated, with value <Code>{abbreviate(signature)}</Code> (in base64 format).</Text>
+          ) : (
+            <>
+              <Text>🖊️ Generate signature of the PDF file checksum.</Text>
+              <Button
+                onClick={async () => {
+                  const signature = await generateSignature(credential, documentChecksum);
+                  loadSignature({ signature });
+                }}
+              >
+                Generate signature
               </Button>
             </>
           ))}
