@@ -1,5 +1,5 @@
 import { Credential, SignatureAlgorithm } from '@nodecfdi/credentials'
-import { KEYUTIL, RSAKey, hex2b64 } from 'jsrsasign';
+import { KEYUTIL, RSAKey, hex2b64, KJUR } from 'jsrsasign';
 import { importRSAPrivateKeyFromPEMFormat } from './rsa';
 
 
@@ -13,7 +13,7 @@ export const loadDemoCredential = async (): Promise<Credential> => {
   return fiel;
 };
 
-export const loadCryptoKeyFromCredential = async({ credential }: { credential: Credential }): Promise<CryptoKey> => {
+export const loadCryptoKeyFromCredential = async ({ credential }: { credential: Credential }): Promise<CryptoKey> => {
   const rsaKey: RSAKey = KEYUTIL.getKeyFromEncryptedPKCS8PEM(credential.privateKey().pem(), credential.privateKey().passPhrase())
   const decryptedPEM = KEYUTIL.getPEM(rsaKey, "PKCS8PRV");
   const cryptoKey = await importRSAPrivateKeyFromPEMFormat(decryptedPEM);
@@ -21,8 +21,16 @@ export const loadCryptoKeyFromCredential = async({ credential }: { credential: C
 }
 
 export function generateSignature(credential: Credential, payload: string): string {
-  const signatureAsHex = credential.sign(payload, SignatureAlgorithm.SHA1);
-  const signatureAsB64 = hex2b64(signatureAsHex)
-  return signatureAsB64
+  const signatureAsHex = credential.sign(payload);
+  return signatureAsHex
 }
-  
+
+export function verifySignature(credential: Credential, payload: string, signatureAsB64: string): boolean {
+  const sig = new KJUR.crypto.Signature({ alg: SignatureAlgorithm.SHA256 });
+  const certificate = credential.certificate();
+  const certificateAsPEM = certificate.pem();
+  sig.init(certificateAsPEM);
+  sig.updateString(payload);
+  const isValid = sig.verify(signatureAsB64);
+  return isValid;
+}

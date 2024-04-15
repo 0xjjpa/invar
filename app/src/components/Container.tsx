@@ -7,7 +7,6 @@ export const Container = (props: FlexProps) => (
     justifyContent="flex-start"
     color="black"
     _dark={{
-      bg: "gray.900",
       color: "white",
     }}
     transition="all 0.15s ease-out"

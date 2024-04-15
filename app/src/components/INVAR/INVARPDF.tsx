@@ -1,5 +1,11 @@
+import { useState } from "react";
 import { INVAR_PDF_DEMO_FILE, INVAR_PDF_DEMO_URL } from "../../constants/invar";
-import { generateSignature, loadCryptoKeyFromCredential, loadDemoCredential } from "../../lib/fiel";
+import {
+  generateSignature,
+  loadCryptoKeyFromCredential,
+  loadDemoCredential,
+  verifySignature,
+} from "../../lib/fiel";
 import { usePDFStore } from "./INVARStore";
 import { Button, Link as ChakraLink, Code, Flex, Text } from "@chakra-ui/react";
 
@@ -16,6 +22,8 @@ export const INVARPDF = () => {
   const loadCredential = usePDFStore((state) => state.loadCredential);
   const loadKey = usePDFStore((state) => state.loadKey);
   const loadSignature = usePDFStore((state) => state.loadSignature);
+
+  const [isSignatureValid, setIsSignatureValid] = useState(undefined);
 
   async function fetchFileHash(filename: string) {
     const response = await fetch(`/api/hash/${filename}`);
@@ -34,7 +42,12 @@ export const INVARPDF = () => {
 
   return (
     <>
-      <Flex gap="2" alignItems={"center"} h="40px" justifyContent={'space-between'}>
+      <Flex
+        gap="2"
+        alignItems={"center"}
+        h="40px"
+        justifyContent={"space-between"}
+      >
         {documentURL ? (
           <Text>
             📄 PDF loaded, find it{" "}
@@ -60,7 +73,12 @@ export const INVARPDF = () => {
           </>
         )}
       </Flex>
-      <Flex gap="2" alignItems={"center"} h="40px" justifyContent={'space-between'}>
+      <Flex
+        gap="2"
+        alignItems={"center"}
+        h="40px"
+        justifyContent={"space-between"}
+      >
         {documentURL &&
           (documentChecksum ? (
             <Text>
@@ -81,13 +99,24 @@ export const INVARPDF = () => {
             </>
           ))}
       </Flex>
-      <Flex gap="2" alignItems={"center"} h="40px" justifyContent={'space-between'}>
-        {(documentURL && documentChecksum) &&
+      <Flex
+        gap="2"
+        alignItems={"center"}
+        h="40px"
+        justifyContent={"space-between"}
+      >
+        {documentURL &&
+          documentChecksum &&
           (credential ? (
-            <Text>🪪 Credential loaded, user <Code>{credential.legalName()}</Code> has been loaded.</Text>
+            <Text>
+              🪪 Credential loaded, user <Code>{credential.legalName()}</Code>{" "}
+              has been loaded.
+            </Text>
           ) : (
             <>
-              <Text>👤 Retrieve demo credentials stamped by governamental PKI.</Text>
+              <Text>
+                👤 Retrieve demo credentials stamped by governamental PKI.
+              </Text>
               <Button
                 onClick={async () => {
                   const credential = await loadDemoCredential();
@@ -99,13 +128,25 @@ export const INVARPDF = () => {
             </>
           ))}
       </Flex>
-      <Flex gap="2" alignItems={"center"} h="40px" justifyContent={'space-between'}>
-        {(documentURL && documentChecksum && credential) &&
+      <Flex
+        gap="2"
+        alignItems={"center"}
+        h="40px"
+        justifyContent={"space-between"}
+      >
+        {documentURL &&
+          documentChecksum &&
+          credential &&
           (key ? (
-            <Text>🔐 Private key loaded, key of type <Code>{key.algorithm.name}</Code> has been loaded.</Text>
+            <Text>
+              🔐 Private key loaded, key of type{" "}
+              <Code>{key.algorithm.name}</Code> has been loaded.
+            </Text>
           ) : (
             <>
-              <Text>🔑 Retrieve RSA private key from CA-stamped certificate .</Text>
+              <Text>
+                🔑 Retrieve RSA private key from CA-stamped certificate .
+              </Text>
               <Button
                 onClick={async () => {
                   const key = await loadCryptoKeyFromCredential({ credential });
@@ -117,16 +158,30 @@ export const INVARPDF = () => {
             </>
           ))}
       </Flex>
-      <Flex gap="2" alignItems={"center"} h="40px" justifyContent={'space-between'}>
-        {(documentURL && documentChecksum && credential && key) &&
+      <Flex
+        gap="2"
+        alignItems={"center"}
+        h="40px"
+        justifyContent={"space-between"}
+      >
+        {documentURL &&
+          documentChecksum &&
+          credential &&
+          key &&
           (signature ? (
-            <Text>🔏 Signature generated, with value <Code>{abbreviate(signature)}</Code> (in base64 format).</Text>
+            <Text>
+              🔏 Signature generated, with value{" "}
+              <Code>{abbreviate(signature)}</Code> (in hex format).
+            </Text>
           ) : (
             <>
               <Text>🖊️ Generate signature of the PDF file checksum.</Text>
               <Button
                 onClick={async () => {
-                  const signature = await generateSignature(credential, documentChecksum);
+                  const signature = generateSignature(
+                    credential,
+                    documentChecksum
+                  );
                   loadSignature({ signature });
                 }}
               >
@@ -134,6 +189,35 @@ export const INVARPDF = () => {
               </Button>
             </>
           ))}
+      </Flex>
+      <Flex
+        gap="2"
+        alignItems={"center"}
+        h="40px"
+        justifyContent={"space-between"}
+      >
+        {documentURL && documentChecksum && credential && key && signature && (
+          <>
+            <Text>
+              ✒️ Verify validity of the signature from credential public key.{" "}
+              {isSignatureValid && <Code>(✅ it is)</Code>}
+            </Text>
+            {!isSignatureValid && (
+              <Button
+                onClick={async () => {
+                  const isValid = verifySignature(
+                    credential,
+                    documentChecksum,
+                    signature
+                  );
+                  setIsSignatureValid(isValid);
+                }}
+              >
+                Verify signature
+              </Button>
+            )}
+          </>
+        )}
       </Flex>
     </>
   );
