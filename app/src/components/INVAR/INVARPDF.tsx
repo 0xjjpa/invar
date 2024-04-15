@@ -1,5 +1,5 @@
 import { INVAR_PDF_DEMO_FILE, INVAR_PDF_DEMO_URL } from "../../constants/invar";
-import { loadDemoCredential } from "../../lib/fiel";
+import { loadCryptoKeyFromCredential, loadDemoCredential } from "../../lib/fiel";
 import { usePDFStore } from "./INVARStore";
 import { Button, Link as ChakraLink, Code, Flex, Text } from "@chakra-ui/react";
 
@@ -7,11 +7,13 @@ export const INVARPDF = () => {
   const documentURL = usePDFStore((state) => state.documentURL);
   const documentChecksum = usePDFStore((state) => state.documentChecksum);
   const credential = usePDFStore((state) => state.credential);
+  const key = usePDFStore((state) => state.key);
   const loadDocumentURL = usePDFStore((state) => state.loadDocumentURL);
   const loadDocumentChecksum = usePDFStore(
     (state) => state.loadDocumentChecksum
   );
   const loadCredential = usePDFStore((state) => state.loadCredential);
+  const loadKey = usePDFStore((state) => state.loadKey);
 
   async function fetchFileHash(filename: string) {
     const response = await fetch(`/api/hash/${filename}`);
@@ -91,6 +93,24 @@ export const INVARPDF = () => {
                 }}
               >
                 Load sample credential
+              </Button>
+            </>
+          ))}
+      </Flex>
+      <Flex gap="2" alignItems={"center"} h="40px" justifyContent={'space-between'}>
+        {(documentURL && documentChecksum && credential) &&
+          (key ? (
+            <Text>🔐 Private key loaded, key of type <Code>{key.algorithm.name}</Code> has been loaded.</Text>
+          ) : (
+            <>
+              <Text>🔑 Retrieve RSA private key from CA-stamped certificate .</Text>
+              <Button
+                onClick={async () => {
+                  const key = await loadCryptoKeyFromCredential({ credential });
+                  loadKey({ key });
+                }}
+              >
+                Load key from credential
               </Button>
             </>
           ))}

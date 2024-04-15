@@ -1,4 +1,7 @@
 import { Credential } from '@nodecfdi/credentials'
+import { KEYUTIL, RSAKey, hex2b64 } from 'jsrsasign';
+import { importRSAPrivateKeyFromPEMFormat } from './rsa';
+
 
 // Downloaded from http://omawww.sat.gob.mx/tramitesyservicios/Paginas/certificado_sello_digital.htm
 export const loadDemoCredential = async (): Promise<Credential> => {
@@ -9,3 +12,11 @@ export const loadDemoCredential = async (): Promise<Credential> => {
   const fiel = Credential.create(String(certificate), String(privateKey), "12345678a");
   return fiel;
 };
+
+export const loadCryptoKeyFromCredential = async({ credential }: { credential: Credential }): Promise<CryptoKey> => {
+  const rsaKey: RSAKey = KEYUTIL.getKeyFromEncryptedPKCS8PEM(credential.privateKey().pem(), credential.privateKey().passPhrase())
+  const decryptedPEM = KEYUTIL.getPEM(rsaKey, "PKCS8PRV");
+  const cryptoKey = await importRSAPrivateKeyFromPEMFormat(decryptedPEM);
+  return cryptoKey;
+}
+  
