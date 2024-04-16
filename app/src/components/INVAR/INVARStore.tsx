@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { Credential } from "@nodecfdi/credentials";
+import { AttestationResult } from "@ethsign/sp-sdk";
 
 export interface PDFState {
   documentURL: string;
@@ -7,6 +8,7 @@ export interface PDFState {
   credential: Credential;
   key: CryptoKey;
   signature: string;
+  attestation: AttestationResult;
   loadDocumentURL: ({ documentURL }: { documentURL: string }) => void;
   loadDocumentChecksum: ({
     documentChecksum,
@@ -16,6 +18,11 @@ export interface PDFState {
   loadCredential: ({ credential }: { credential: Credential }) => void;
   loadKey: ({ key }: { key: CryptoKey }) => void;
   loadSignature: ({ signature }: { signature: string }) => void;
+  loadAttestation: ({
+    attestation,
+  }: {
+    attestation: AttestationResult;
+  }) => void;
 }
 
 export const usePDFStore = create<PDFState>()((set) => ({
@@ -24,6 +31,7 @@ export const usePDFStore = create<PDFState>()((set) => ({
   credential: null,
   key: null,
   signature: null,
+  attestation: null,
   loadDocumentURL: ({ documentURL }: { documentURL: string }) => {
     set(() => ({ documentURL }));
   },
@@ -42,5 +50,8 @@ export const usePDFStore = create<PDFState>()((set) => ({
   },
   loadSignature: ({ signature }: { signature: string }) => {
     set(() => ({ signature }));
+  },
+  loadAttestation: ({ attestation }: { attestation: AttestationResult }) => {
+    set(() => ({ attestation }));
   },
 }));

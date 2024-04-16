@@ -38,15 +38,15 @@ const Index = () => (
 
       <List spacing={3} my={0} color="text">
         <ListItem>
-          👤 <Code>Who?</Code>Professionals in any field who need to issue
+          👤 <Code mx="2">Who?</Code>Professionals in any field who need to issue
           secure, official or legally binding documents.
         </ListItem>
         <ListItem>
-          ❌ <Code>Why?</Code>Document forgery, jeopardizing the reliability and
+          ❌ <Code mx="2">Why?</Code>Document forgery, jeopardizing the reliability and
           trust in critical documents.
         </ListItem>
         <ListItem>
-          ⚙️ <Code>How?</Code>By issuing PKI-enabled, traceable and permanent
+          ⚙️ <Code mx="2">How?</Code>By issuing PKI-enabled, traceable and permanent
           attestations through decentralized tech.
         </ListItem>
       </List>

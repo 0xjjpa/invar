@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { INVAR_PDF_DEMO_FILE, INVAR_PDF_DEMO_URL } from "../../constants/invar";
+import {
+  INVAR_OFF_CHAIN_SCHEMA_ID,
+  INVAR_ONCHAIN_FULL_SCHEMA_ID,
+  INVAR_PDF_DEMO_FILE,
+  INVAR_PDF_DEMO_URL,
+} from "../../constants/invar";
 import {
   generateSignature,
   loadCryptoKeyFromCredential,
@@ -8,6 +13,9 @@ import {
 } from "../../lib/fiel";
 import { usePDFStore } from "./INVARStore";
 import { Button, Link as ChakraLink, Code, Flex, Text } from "@chakra-ui/react";
+import { createAttestation } from "../../lib/sign";
+import { INVARAttestation } from "../../types/invar";
+import { AttestationResult } from "@ethsign/sp-sdk";
 
 export const INVARPDF = () => {
   const documentURL = usePDFStore((state) => state.documentURL);
@@ -15,6 +23,7 @@ export const INVARPDF = () => {
   const credential = usePDFStore((state) => state.credential);
   const key = usePDFStore((state) => state.key);
   const signature = usePDFStore((state) => state.signature);
+  const attestation = usePDFStore((state) => state.attestation);
   const loadDocumentURL = usePDFStore((state) => state.loadDocumentURL);
   const loadDocumentChecksum = usePDFStore(
     (state) => state.loadDocumentChecksum
@@ -22,6 +31,7 @@ export const INVARPDF = () => {
   const loadCredential = usePDFStore((state) => state.loadCredential);
   const loadKey = usePDFStore((state) => state.loadKey);
   const loadSignature = usePDFStore((state) => state.loadSignature);
+  const loadAttestation = usePDFStore((state) => state.loadAttestation);
 
   const [isSignatureValid, setIsSignatureValid] = useState(undefined);
 
@@ -32,6 +42,35 @@ export const INVARPDF = () => {
     }
     const data = await response.json();
     return data.hash;
+  }
+
+  async function fetchAttestationData({
+    schemaId,
+    attestationData,
+    index,
+  }: {
+    schemaId: string;
+    attestationData: INVARAttestation;
+    index: string;
+  }) {
+    const attestationResponse = await fetch(
+      `/api/attestation/${schemaId}/${index}`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          attestationData,
+        }),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (!attestationResponse.ok) {
+      throw new Error("Failed to fetch the hash");
+    }
+    const dataWithAttestationAsJSONString = await attestationResponse.json();
+    return JSON.parse(dataWithAttestationAsJSONString.attestation) as AttestationResult;
   }
 
   const abbreviate = (str: string, length = 10) =>
@@ -45,20 +84,19 @@ export const INVARPDF = () => {
       <Flex
         gap="2"
         alignItems={"center"}
-        h="40px"
+        h="50px"
         justifyContent={"space-between"}
       >
         {documentURL ? (
           <Text>
-            📄 PDF loaded, find it{" "}
+            📑 PDF loaded, find it{" "}
             <ChakraLink
               textDecoration={"underline"}
               isExternal
               href={documentURL}
             >
               here
-            </ChakraLink>
-            .
+            </ChakraLink>, download it to check its <Code>SHA256</Code> checksum yourself.
           </Text>
         ) : (
           <>
@@ -76,7 +114,7 @@ export const INVARPDF = () => {
       <Flex
         gap="2"
         alignItems={"center"}
-        h="40px"
+        h="50px"
         justifyContent={"space-between"}
       >
         {documentURL &&
@@ -102,7 +140,7 @@ export const INVARPDF = () => {
       <Flex
         gap="2"
         alignItems={"center"}
-        h="40px"
+        h="50px"
         justifyContent={"space-between"}
       >
         {documentURL &&
@@ -131,7 +169,7 @@ export const INVARPDF = () => {
       <Flex
         gap="2"
         alignItems={"center"}
-        h="40px"
+        h="50px"
         justifyContent={"space-between"}
       >
         {documentURL &&
@@ -161,7 +199,7 @@ export const INVARPDF = () => {
       <Flex
         gap="2"
         alignItems={"center"}
-        h="40px"
+        h="50px"
         justifyContent={"space-between"}
       >
         {documentURL &&
@@ -193,7 +231,7 @@ export const INVARPDF = () => {
       <Flex
         gap="2"
         alignItems={"center"}
-        h="40px"
+        h="50px"
         justifyContent={"space-between"}
       >
         {documentURL && documentChecksum && credential && key && signature && (
@@ -218,6 +256,54 @@ export const INVARPDF = () => {
             )}
           </>
         )}
+      </Flex>
+      <Flex
+        gap="2"
+        alignItems={"center"}
+        h="50px"
+        justifyContent={"space-between"}
+      >
+        {documentURL &&
+          documentChecksum &&
+          credential &&
+          key &&
+          signature &&
+          (attestation ? (
+            <Text>
+              📄 Attestation created with ID{" "}
+              <Code>{attestation.attestationId}</Code> and can be seen{" "}
+              <ChakraLink
+                textDecoration={"underline"}
+                isExternal
+                href={`https://testnet-scan.sign.global/attestation/${INVAR_ONCHAIN_FULL_SCHEMA_ID}_${attestation.attestationId}`}
+              >
+                here
+              </ChakraLink>
+              .
+            </Text>
+          ) : (
+            <>
+              <Text>
+                ✍🏼 Generate attestation for <Code>{credential.rfc()}</Code> with
+                checksum and certificate.
+              </Text>
+              <Button
+                onClick={async () => {
+                  const attestation = await fetchAttestationData({
+                    schemaId: INVAR_OFF_CHAIN_SCHEMA_ID,
+                    attestationData: {
+                      certificateAsPEM: credential.certificate().pem(),
+                      documentSHA256Checksum: documentChecksum,
+                    },
+                    index: credential.rfc(),
+                  });
+                  loadAttestation({ attestation });
+                }}
+              >
+                Create attestation
+              </Button>
+            </>
+          ))}
       </Flex>
     </>
   );

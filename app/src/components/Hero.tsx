@@ -6,7 +6,7 @@ export const Hero = ({ title }: { title: string }) => (
     alignItems="center"
     height="100vh"
   >
-    <Heading fontSize="4vw">{title}</Heading>
+    <Heading m="100px" fontSize="4vw">{title}</Heading>
   </Flex>
 );
 
